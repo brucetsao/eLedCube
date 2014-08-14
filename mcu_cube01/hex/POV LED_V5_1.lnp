@@ -1,0 +1,14 @@
+".\HEX\74hc595.obj",
+".\HEX\Time.obj",
+".\HEX\display.obj",
+".\HEX\povdat.obj",
+".\HEX\IR.obj",
+".\HEX\Exti.obj",
+".\HEX\display_hand.obj",
+".\HEX\main.obj",
+".\HEX\IR_KEY.obj",
+".\HEX\EEPROM.obj",
+".\HEX\display_figure.obj",
+".\HEX\ds1302.obj" 
+TO ".\HEX\POV LED_V5_1" 
+PRINT(".\POV LED_V5_1.m51") RAMSIZE(256) 

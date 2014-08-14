@@ -1,0 +1,221 @@
+C51 COMPILER V9.52.0.0   DISPLAY                                                           07/28/2014 21:01:29 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN .\HEX\display.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE display.c DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\display.obj)
+
+line level    source
+
+   1          #include "display.H"
+   2          
+   3          //外部函数要用到必须声明为外部全局变量
+   4          
+   5          uchar dat1,dat2,dat3,dat4;     //平面显示数据变量
+   6          uchar dat5,dat6;         //侧面显示数据变量
+   7          uchar pic_id;          //图片切换ID
+   8          //每张图片占用720字节，EEPROM 从0X0000，开始，前面8张图片是动画； 从第9张开始显示图片
+   9          //图片张数            1      2    3      4      5    6    7      8      9    10   11     12     13     14   15   1
+             -6      17     18    19   20     21     22   23   24     25     26   27   28     29     30   31      32   33     34      35      36   
+             -  37    38   39     40     41   42   43     44     45   46   47
+  10          //存储地址  十进制表示  0      720    1440   2160   2880   3600   4320   5040 5760   6480   7200   7920 8640
+             -   9360   10080  10800  11520  12240  12960  13680  14400  15120  15840  16560  17280  18000  18720  19440  20160  20880
+             -  21600    22320  23040  23760  24480  25200  25920  26640   27360  28080  28800  29520  30240  30960  31680  32400  39600
+  11          //          16进制表示  0x0000 0x02D0 0x05A0 0x0870 0x0B40 0x0E10 0x10E0 0x13B0 0x1680 0x1950 0x1C20 0x1EF0
+             - 0x21C0 0x2490 0x2760 0x2A30 0x2d00 0x2fd0 0x32a0 0x3570 0x3840 0x3B10 0x3DE0 0x40B0 0x4380 0x4650 0x4920 0x4BF0 0x4EC0 
+             -0x5190 0x5460  0x5730 0x5A00 0x5CD0  0x5FA0 0x6270 0x6540 0x6810  0x6AE0 0x6DB0 0x7080 0x7350 0x7620 0x78F0 0x7BC0 0x7E9
+             -0 0x8160
+  12          uint picaddr;       //EEPROM图片动画地址
+  13          uint picaddr_end;   //EEPROM图片动画结束地址
+  14          uint picaddr_start; //EEPROM图片动画结束
+  15          uchar xdata pov_pic[180][4]; //图片动画数据缓冲
+  16          uchar xdata pov_hz[180][2];  //侧面文字数据缓冲
+  17          //bit pic_rd_flag;
+  18          //bit pic_red_ok;
+  19          //bit Time0_flag=0; //定时器T0中断标志位
+  20          
+  21          /*
+  22          void pic_chang(void)
+  23          { 
+  24            uchar i;
+  25            if(pic_red_ok)
+  26            {
+  27               if(pic_ch_flag)
+  28               {
+  29                  pic_ch_flag=0;
+  30                 if(pic_rd_flag==0)
+  31                 {
+  32                     pov_pic[i][0]= pov_pic[i][1]= pov_pic[i][2]= pov_pic[i][3]=0x00;
+  33                   i++;
+  34                   if(i>179)
+  35                   {
+  36                   i=0; pic_rd_flag=1;
+  37                   }   
+  38                 }
+  39                 else
+  40                 {
+  41                  pov_pic[i][0]=IapReadByte(picaddr+0);
+  42                  pov_pic[i][1]=IapReadByte(picaddr+1);
+  43                  pov_pic[i][2]=IapReadByte(picaddr+2);
+  44                  pov_pic[i][3]=IapReadByte(picaddr+3);
+  45                  i++;picaddr=picaddr+4;
+  46                  if(i>179)
+  47                  {
+  48                    i=0;
+C51 COMPILER V9.52.0.0   DISPLAY                                                           07/28/2014 21:01:29 PAGE 2   
+
+  49                    pic_red_ok=0;
+  50                  }  
+  51                  //if(picaddr==0x4bf0)
+  52                  //if(picaddr==0x1680)
+  53                  if(picaddr==0x10E0)     //赵晗生日快乐结束地址
+  54                  {
+  55                    picaddr=0;
+  56                    //picaddr=0x1950 ;
+  57                  } 
+  58                   
+  59                 }
+  60              }
+  61            }
+  62          }
+  63           */
+  64           //图片变换函数
+  65          void pic_chang(void)
+  66          { 
+  67   1        uchar i;
+  68   1        picaddr_end=pic_addr[Addr_num][1]; //初始化图片动画结束地址
+  69   1        picaddr_start=pic_addr[Addr_num][0];  //动画开始地址  
+  70   1        if(pic_ch_flag)    //如果125US到
+  71   1        {
+  72   2           pic_ch_flag=0;  //清125US中断标志位
+  73   2           if(pic_red_ok)  //如果图片切换时间标志到
+  74   2           {
+  75   3              //图片文字檫除显示
+  76   3            /*
+  77   3             if(pic_rd_flag==0)
+  78   3             {
+  79   3                 pov_pic[i][0]= pov_pic[i][1]= pov_pic[i][2]= pov_pic[i][3]=0x00;  //镲图
+  80   3               //pov_hz[i][0]= pov_hz[i][1]=0xff;   //镲文字
+  81   3               i++;
+  82   3               if(i>179)
+  83   3               {
+  84   3                i=0;
+  85   3                pic_rd_flag=1;
+  86   3               }   
+  87   3             }
+  88   3             if(pic_rd_flag==1)
+  89   3             
+  90   3             */
+  91   3             {
+  92   4              pov_pic[i][0]=IapReadByte(picaddr+0); //从EEPROM读
+  93   4              pov_pic[i][1]=IapReadByte(picaddr+1); //从EEPROM读
+  94   4              pov_pic[i][2]=IapReadByte(picaddr+2); //从EEPROM读
+  95   4              pov_pic[i][3]=IapReadByte(picaddr+3); //从EEPROM读
+  96   4              //pov_hz[i][0]=hanzi[2*i];
+  97   4                  //pov_hz[i][1]=hanzi[(2*i+1)];
+  98   4                //pov_hz[i][1]=hanzi[359-2*i];  //从汉字数组读
+  99   4                  //pov_hz[i][0]=hanzi[359-(2*i+1)];//从汉字数组读
+ 100   4              i++;picaddr=picaddr+4;
+ 101   4              if(i>179)
+ 102   4              {
+ 103   5                i=0 ;
+ 104   5                pic_red_ok=0; pic_rd_flag=0;
+ 105   5              }  
+ 106   4              //if(picaddr==0x4bf0)   //27张图
+ 107   4              //if(picaddr==0x1680)   //奔马动画的结束地址
+ 108   4              //if(picaddr==0x1c20)   //跑步动画的结束地址
+ 109   4              //if(picaddr==0x8160) //书写效果的结束地址
+ 110   4              //if(picaddr==0x3b10)   //周庆生日快乐结束地址
+C51 COMPILER V9.52.0.0   DISPLAY                                                           07/28/2014 21:01:29 PAGE 3   
+
+ 111   4              //if(picaddr==0x5460)   //30张图
+ 112   4              //if(picaddr==0x2d00)   //生日蛋糕结束地址
+ 113   4              //if(picaddr==0x0E10)   //蝴蝶动画结束地址
+ 114   4              //if(picaddr==0x10E0)   //双人心动画结束地址
+ 115   4              if(picaddr==picaddr_end)    //每一个动画的结束地址
+ 116   4              {
+ 117   5                //picaddr=0x0000;     //返回初始地址
+ 118   5                //picaddr=0x1680 ;  //返回图片初始地址
+ 119   5                picaddr=picaddr_start; //返回初始地址
+ 120   5              } 
+ 121   4               
+ 122   4             }
+ 123   3          }
+ 124   2        }
+ 125   1      }
+ 126          //图片显示函数
+ 127          void display_pic()
+ 128          {
+ 129   1        
+ 130   1        uchar temp;
+ 131   1        dis_close(); 
+ 132   1          P2=P0=0xff;
+ 133   1        pic_chang();
+ 134   1          if(Time0_flag)  
+ 135   1        {
+ 136   2          Time0_flag=0;
+ 137   2          if(Int0_flag)
+ 138   2          {
+ 139   3            //Int0_flag=0;
+ 140   3            temp=(T0_S-1);
+ 141   3            if((temp)<=180)
+ 142   3            {
+ 143   4              
+ 144   4            
+ 145   4              dat1=~pov_pic[temp][0];
+ 146   4              //_cror_ (dat1, 7);
+ 147   4              dat2=~pov_pic[temp][1];
+ 148   4              //_cror_ (dat2, 7);
+ 149   4              dat3=~pov_pic[temp][2];
+ 150   4              //_cror_ (dat3, 7);
+ 151   4              dat4=~pov_pic[temp][3];
+ 152   4              //_cror_ (dat4, 7);
+ 153   4              /*  
+ 154   4              dat1=~pic2[temp][0];
+ 155   4              dat2=~pic2[temp][1];
+ 156   4              dat3=~pic2[temp][2];
+ 157   4              dat4=~pic2[temp][3]; 
+ 158   4              */   
+ 159   4              //dat6=pov_hz[temp][0]; 
+ 160   4                //dat5=pov_hz[temp][1];
+ 161   4              dat5=pov_hz[line_now][0]; 
+ 162   4                dat6=pov_hz[line_now][1];
+ 163   4              
+ 164   4              LED1=0;
+ 165   4            LED0=0; 
+ 166   4            Send_data_A(dat1,dat2);
+ 167   4            //Send_data_B(dat1);
+ 168   4            Send_data_B(dat5,dat6);
+ 169   4            
+ 170   4              //P0=dat3;
+ 171   4            //高低位互换
+ 172   4            P2=dat3;
+C51 COMPILER V9.52.0.0   DISPLAY                                                           07/28/2014 21:01:29 PAGE 4   
+
+ 173   4            P0=dat4;
+ 174   4            dis_open(); 
+ 175   4            
+ 176   4            delay();
+ 177   4            //LED0=1; 
+ 178   4            //LED1=1;
+ 179   4            dis_close();
+ 180   4            P0=P2=0xff;
+ 181   4            }
+ 182   3          }
+ 183   2          
+ 184   2        }
+ 185   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    410    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   1080    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

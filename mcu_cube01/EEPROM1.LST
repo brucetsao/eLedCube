@@ -1,0 +1,152 @@
+C51 COMPILER V9.00   EEPROM1                                                               07/09/2013 07:52:56 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE EEPROM1
+OBJECT MODULE PLACED IN EEPROM1.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE EEPROM1.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /*------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ---------------------------------------------*/
+   3          /* --- STC12C5Axx Series MCU ISP/IAP/EEPROM Demo -------------------*/
+   4          /* --- Mobile: (86)13922805190 -------------------------------------*/
+   5          /* --- Fax: 86-755-82905966 ----------------------------------------*/
+   6          /* --- Tel: 86-755-82948412 ----------------------------------------*/
+   7          /* --- Web: www.STCMCU.com -----------------------------------------*/
+   8          /* If you want to use the program or the program referenced in the  */
+   9          /* article, please specify in which data and procedures from STC    */
+  10          /*------------------------------------------------------------------*/
+  11          
+  12          #include "eeprom.h"
+*** WARNING C318 IN LINE 12 OF EEPROM1.c: can't open file 'eeprom.h'
+  13          
+  14          
+  15          
+  16          
+  17          /*Declare SFR associated with the IAP 
+  18          sfr IAP_DATA    =   0xC2;           //Flash data register
+  19          sfr IAP_ADDRH   =   0xC3;           //Flash address HIGH
+  20          sfr IAP_ADDRL   =   0xC4;           //Flash address LOW
+  21          sfr IAP_CMD     =   0xC5;           //Flash command register
+  22          sfr IAP_TRIG    =   0xC6;           //Flash command trigger
+  23          sfr IAP_CONTR   =   0xC7;           //Flash control register
+  24          */
+  25          
+  26          
+  27          /*
+  28          void main()
+  29          {
+  30              WORD i;
+  31          
+  32              P1 = 0xfe;                      //1111,1110 System Reset OK
+  33              Delay(10);                      //Delay
+  34              IapEraseSector(IAP_ADDRESS);    //Erase current sector
+  35              for (i=0; i<512; i++)           //Check whether all sector data is FF
+  36              {
+  37                  if (IapReadByte(IAP_ADDRESS+i) != 0xff)
+  38                      goto Error;             //If error, break
+  39              }
+  40              P1 = 0xfc;                      //1111,1100 Erase successful
+  41              Delay(10);                      //Delay
+  42              for (i=0; i<512; i++)           //Program 512 bytes data into data flash
+  43              {
+  44                  IapProgramByte(IAP_ADDRESS+i, (BYTE)i);
+  45              }
+  46              P1 = 0xf8;                      //1111,1000 Program successful
+  47              Delay(10);                      //Delay
+  48              for (i=0; i<512; i++)           //Verify 512 bytes data
+  49              {
+  50                  if (IapReadByte(IAP_ADDRESS+i) != (BYTE)i)
+  51                      goto Error;             //If error, break
+  52              }
+  53              P1 = 0xf0;                      //1111,0000 Verify successful
+  54              while (1);
+C51 COMPILER V9.00   EEPROM1                                                               07/09/2013 07:52:56 PAGE 2   
+
+  55          Error:
+  56              P1 &= 0x7f;                     //0xxx,xxxx IAP operation fail
+  57              while (1);
+  58          }
+  59          */
+  60          /*----------------------------
+  61          Disable ISP/IAP/EEPROM function
+  62          Make MCU in a safe state
+  63          ----------------------------*/
+  64          void IapIdle()
+  65          {
+  66   1          IAP_CONTR = 0;                  //Close IAP function
+*** ERROR C202 IN LINE 66 OF EEPROM1.C: 'IAP_CONTR': undefined identifier
+  67   1          IAP_CMD = 0;                    //Clear command to standby
+*** ERROR C202 IN LINE 67 OF EEPROM1.C: 'IAP_CMD': undefined identifier
+  68   1          IAP_TRIG = 0;                   //Clear trigger register
+*** ERROR C202 IN LINE 68 OF EEPROM1.C: 'IAP_TRIG': undefined identifier
+  69   1          IAP_ADDRH = 0x80;               //Data ptr point to non-EEPROM area
+*** ERROR C202 IN LINE 69 OF EEPROM1.C: 'IAP_ADDRH': undefined identifier
+  70   1          IAP_ADDRL = 0;                  //Clear IAP address to prevent misuse
+*** ERROR C202 IN LINE 70 OF EEPROM1.C: 'IAP_ADDRL': undefined identifier
+  71   1      }
+  72          
+  73          /*----------------------------
+  74          Read one byte from ISP/IAP/EEPROM area
+  75          Input: addr (ISP/IAP/EEPROM address)
+  76          Output:Flash data
+  77          ----------------------------*/
+  78          uchar IapReadByte(uint addr)
+*** ERROR C129 IN LINE 78 OF EEPROM1.C: missing ';' before 'IapReadByte'
+  79          {
+  80              uchar dat;                       //Data buffer
+  81          
+  82              IAP_CONTR = ENABLE_IAP;         //Open IAP function, and set wait time
+  83              IAP_CMD = CMD_READ;             //Set ISP/IAP/EEPROM READ command
+  84              IAP_ADDRL = addr;               //Set ISP/IAP/EEPROM address low
+  85              IAP_ADDRH = addr >> 8;          //Set ISP/IAP/EEPROM address high
+  86              IAP_TRIG = 0x5a;                //Send trigger command1 (0x5a)
+  87              IAP_TRIG = 0xa5;                //Send trigger command2 (0xa5)
+  88              _nop_();                        //MCU will hold here until ISP/IAP/EEPROM operation complete
+  89              dat = IAP_DATA;                 //Read ISP/IAP/EEPROM data
+  90              IapIdle();                      //Close ISP/IAP/EEPROM function
+  91          
+  92              return dat;                     //Return Flash data
+  93          }
+  94          
+  95          /*----------------------------
+  96          Program one byte to ISP/IAP/EEPROM area
+  97          Input: addr (ISP/IAP/EEPROM address)
+  98                 dat (ISP/IAP/EEPROM data)
+  99          Output:-
+ 100          ----------------------------*/
+ 101          void IapProgramByte(uint addr, uchar dat)
+ 102          {
+ 103              IAP_CONTR = ENABLE_IAP;         //Open IAP function, and set wait time
+ 104              IAP_CMD = CMD_PROGRAM;          //Set ISP/IAP/EEPROM PROGRAM command
+ 105              IAP_ADDRL = addr;               //Set ISP/IAP/EEPROM address low
+ 106              IAP_ADDRH = addr >> 8;          //Set ISP/IAP/EEPROM address high
+ 107              IAP_DATA = dat;                 //Write ISP/IAP/EEPROM data
+ 108              IAP_TRIG = 0x5a;                //Send trigger command1 (0x5a)
+ 109              IAP_TRIG = 0xa5;                //Send trigger command2 (0xa5)
+ 110              _nop_();                        //MCU will hold here until ISP/IAP/EEPROM operation complete
+C51 COMPILER V9.00   EEPROM1                                                               07/09/2013 07:52:56 PAGE 3   
+
+ 111              IapIdle();
+ 112          }
+ 113          
+ 114          /*----------------------------
+ 115          Erase one sector area
+ 116          Input: addr (ISP/IAP/EEPROM address)
+ 117          Output:-
+ 118          ----------------------------*/
+ 119          void IapEraseSector(uint addr)
+ 120          {
+ 121              IAP_CONTR = ENABLE_IAP;         //Open IAP function, and set wait time
+ 122              IAP_CMD = CMD_ERASE;            //Set ISP/IAP/EEPROM ERASE command
+ 123              IAP_ADDRL = addr;               //Set ISP/IAP/EEPROM address low
+ 124              IAP_ADDRH = addr >> 8;          //Set ISP/IAP/EEPROM address high
+ 125              IAP_TRIG = 0x5a;                //Send trigger command1 (0x5a)
+ 126              IAP_TRIG = 0xa5;                //Send trigger command2 (0xa5)
+ 127              _nop_();                        //MCU will hold here until ISP/IAP/EEPROM operation complete
+ 128              IapIdle();
+ 129          }
+ 130          
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  6 ERROR(S)

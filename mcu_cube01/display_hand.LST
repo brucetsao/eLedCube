@@ -1,0 +1,161 @@
+C51 COMPILER V9.52.0.0   DISPLAY_HAND                                                      07/28/2014 21:01:30 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE DISPLAY_HAND
+OBJECT MODULE PLACED IN .\HEX\display_hand.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE display_hand.c DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\display_hand.obj)
+
+line level    source
+
+   1          #include "display_hand.h"
+   2          uchar t_mode;
+   3          
+   4          //xdata uint hz_dat[360];
+   5          /**********************************************************************************************
+   6          函数名：指针模式函数
+   7          调  用：无
+   8          参  数：无
+   9          返回值：无
+  10          结  果：
+  11          备  注：
+  12          /*********************************************************************************************/
+  13          void display_hand(void)
+  14          {
+  15   1        uchar Temp,datmp1,datmp2,datmp3,datmp4;
+  16   1        //P1=P0=0xff;
+  17   1        //dis_close(); 
+  18   1        datmp1=0xff;
+  19   1        datmp2=0xff;
+  20   1        datmp3=0xff;
+  21   1        datmp4=0xff; 
+  22   1        if(Time0_flag )
+  23   1        {
+  24   2          Time0_flag=0;
+  25   2          Temp=(T0_S-1);
+  26   2          if(Temp<=180)
+  27   2          { 
+  28   3            //datmp1=0;datmp2=0;datmp3=0;datmp4=0;
+  29   3            if(t_mode)   //为1时显示数字指针表盘模式 ，为0时显示指针式表盘模式
+  30   3            {
+  31   4              //标12点
+  32   4              if(Temp==1)  {datmp1=0xcd;}
+  33   4              if(Temp==2)  {datmp1=0xb6;}
+  34   4              if(Temp==3)  {datmp1=0xb6;}
+  35   4              if(Temp==4)  {datmp1=0xb6;}
+  36   4              if(Temp==5)  {datmp1=0xb9;}
+  37   4              if(Temp==179){datmp1=0x80;}
+  38   4        
+  39   4              //标3点
+  40   4              if(Temp==42){datmp1=0xf1;}
+  41   4              if(Temp==43){datmp1=0xee;}
+  42   4              if(Temp==44){datmp1=0xfe;}
+  43   4              if(Temp==45){datmp1=0xf1;}
+  44   4              if(Temp==46){datmp1=0xfe;}
+  45   4              if(Temp==47){datmp1=0xee;}
+  46   4              if(Temp==48){datmp1=0xf1;}
+  47   4              //标6点
+  48   4              if(Temp==88){datmp1=0xd9;}
+  49   4              if(Temp==89){datmp1=0xb6;}
+  50   4              if(Temp==90){datmp1=0xb6;}
+  51   4              if(Temp==91){datmp1=0xb6;}
+  52   4              if(Temp==92){datmp1=0xc1;}
+  53   4              //标9点
+  54   4              if(Temp==132){datmp1=0xf1;}
+  55   4              if(Temp==133){datmp1=0xee;}
+C51 COMPILER V9.52.0.0   DISPLAY_HAND                                                      07/28/2014 21:01:30 PAGE 2   
+
+  56   4              if(Temp==134){datmp1=0xef;}
+  57   4              if(Temp==135){datmp1=0xe1;}
+  58   4              if(Temp==136){datmp1=0xee;}
+  59   4              if(Temp==137){datmp1=0xee;}
+  60   4              if(Temp==138){datmp1=0xf1;}
+  61   4              //标1、2、4、5、7、8、10、11整点
+  62   4              if((Temp==15)||(Temp==30)||(Temp==60)||(Temp==75)||(Temp==105)||(Temp==120)||(Temp==150)||(Temp==165))
+             -{datmp1=0xfc;}
+  63   4            }
+  64   3            else  //否则
+  65   3            {
+  66   4              if(Temp%3==0){datmp1=0xfe;datmp2=0xff;datmp3=0xff;datmp4=0xff;  }   //画分刻度
+  67   4              if((Temp%15==0)||(Temp==179)||(Temp==1)){LED1=0;datmp1= datmp1&0xfc;}
+  68   4            }
+  69   3            switch(Temp%3)
+  70   3            {
+  71   4              case 0:
+  72   4              {
+  73   5                //datmp1=0xfe;datmp2=0xff;datmp3=0xff;datmp4=0xff;     //画分刻度
+  74   5                //if(Temp%15==0){LED1=0;datmp1= datmp1&0xfc;}
+  75   5                  if((Temp==second*3)||(Temp==179)){datmp1= datmp1&0x07;datmp2= datmp2&0x00; datmp3= datmp3&0x00;datm
+             -p4= datmp4&0x00;}
+  76   5                if(Temp==minute*3){datmp1= datmp1&0xff;datmp2= datmp2&0x00; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+  77   5                if(Temp==(15*hour+minute/12*3)) {datmp1= datmp1&0xff;datmp2= datmp2&0x0f; datmp3= datmp3&0x00;datmp4=
+             - datmp4&0x00;}
+  78   5                          
+  79   5                break;      
+  80   5              } 
+  81   4              default:
+  82   4          
+  83   4              {
+  84   5              if(Temp==1||Temp==179)
+  85   5              {datmp1= datmp1&0xfc;datmp2=datmp2&0xff;datmp3=0xff;datmp4=0xff;}
+  86   5              if(minute>0||second>=0)
+  87   5              {
+  88   6                if(Temp==(3*minute-1) || Temp==(3*minute+1))
+  89   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x01; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+  90   6                if(Temp==(15*hour+minute/12*3-1)|| Temp==(15*hour+minute/12*3+1))
+  91   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x1f; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+  92   6                if(Temp==(15*hour+minute/12*3-2)|| Temp==(15*hour+minute/12*3+2))
+  93   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x3f; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+  94   6              }
+  95   5              if(minute==0)
+  96   5              {
+  97   6                if(Temp==(180-3*minute-1) || (Temp==3*minute+1))
+  98   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x01; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+  99   6              }
+ 100   5              if(hour==0)
+ 101   5              {
+ 102   6                if(Temp==(180-15*hour+minute/12*3)-1|| Temp==(15*hour+minute/12*3+1))
+ 103   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x1f; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+ 104   6                if(Temp==(180-15*hour+minute/12*3)-2|| Temp==(15*hour+minute/12*3+2))
+ 105   6                {datmp1= datmp1&0xff;datmp2= datmp2&0x3f; datmp3= datmp3&0x00;datmp4= datmp4&0x00;}
+ 106   6              } 
+ 107   5              break;
+ 108   5              }  
+ 109   4              
+ 110   4               
+ 111   4            } 
+ 112   3      
+ 113   3          dat1=datmp1;dat2=datmp2;dat3=datmp3;dat4=datmp4;  dat5=pov_hz[line_now][0];  dat6=pov_hz[line_now][1];
+ 114   3          }
+C51 COMPILER V9.52.0.0   DISPLAY_HAND                                                      07/28/2014 21:01:30 PAGE 3   
+
+ 115   2               Send_data_A(dat1,dat2);
+ 116   2               Send_data_B(dat5,dat6);  
+ 117   2               dis_open(); 
+ 118   2               P2=dat3;
+ 119   2                 P0=dat4;
+ 120   2             LED1=0;
+ 121   2             LED0=0;   
+ 122   2             LED2=0;
+ 123   2             delay();
+ 124   2             //LED0=1;
+ 125   2             LED1=1;
+ 126   2             LED2=1;
+ 127   2             P0=P2=0xff;
+ 128   2             dis_close(); 
+ 129   2        }   
+ 130   1          
+ 131   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    829    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

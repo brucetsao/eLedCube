@@ -1,0 +1,110 @@
+C51 COMPILER V9.52.0.0   74HC595                                                           07/28/2014 21:01:28 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE 74HC595
+OBJECT MODULE PLACED IN .\HEX\74hc595.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE 74hc595.c DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\74hc595.obj)
+
+line level    source
+
+   1          
+   2          #include "74HC595.H"
+   3          //全局变量定义
+   4          
+   5          /*********************************************/
+   6          //void Send_data_A(u8 temp)   /*从串口发送数据*/
+   7          //{
+   8          //     SBUF=temp;
+   9          //    while(TI==0);       //等待发送完毕
+  10          //      TI=0;
+  11          //    STRA=1;
+  12          //    STRA=0;
+  13          //}
+  14          /****************************************************************
+  15          函数名：LED显示用延时函数
+  16          调  用：delay();
+  17          参  数：无
+  18          返回值：无
+  19          结  果：占用CPU方式延时500微秒时间
+  20          备  注：晶振24.0m 1T模式，每个机器周期为0.06254US；
+  21          /****************************************************************/
+  22          void delay(void)   //误差 -0.46875us
+  23          {
+  24   1          uchar a,b;
+  25   1          for(b=20;b>0;b--)
+  26   1              for(a=2;a>0;a--);
+  27   1      }
+  28          /****************发送数据A*************************/
+  29          void Send_data_A(uchar dat1,uchar dat2)   
+  30          {
+  31   1        uchar i; 
+  32   1        for(i=0;i<8;i++)//一个字节8位 发送给595
+  33   1         {
+  34   2             SCKA=0; //上升沿移位595         
+  35   2           SDAA=(bit)(dat1&0x80);//通过IO口送一个位给 595
+  36   2             dat1=dat1<<1;  //字节移位 准备送下一位        
+  37   2             SCKA=1;
+  38   2         }
+  39   1         for(i=0;i<8;i++)//一个字节8位 发送给595
+  40   1         {
+  41   2             SCKA=0; //上升沿移位595         
+  42   2           SDAA=(bit)(dat2&0x80);//通过IO口送一个位给 595
+  43   2             dat2=dat2<<1;  //字节移位 准备送下一位        
+  44   2             SCKA=1;
+  45   2         }
+  46   1          STRA=1;
+  47   1        STRA=0;
+  48   1         
+  49   1      }
+  50          /****************发送数据B**********************/
+  51          void Send_data_B(uchar temp1,uchar temp2)  
+  52          {
+  53   1         uchar  i; 
+  54   1        for(i=0;i<8;i++)//一个字节8位 发送给595
+  55   1         {
+C51 COMPILER V9.52.0.0   74HC595                                                           07/28/2014 21:01:28 PAGE 2   
+
+  56   2             SCKB=0; //上升沿移位595         
+  57   2           SDAB=(bit)(temp1&0x80);//通过IO口送一个位给 595
+  58   2             temp1=temp1<<1;  //字节移位 准备送下一位        
+  59   2             SCKB=1;
+  60   2         }
+  61   1         for(i=0;i<8;i++)//一个字节8位 发送给595
+  62   1         {
+  63   2             SCKB=0; //上升沿移位595         
+  64   2           SDAB=(bit)(temp2&0x80);//通过IO口送一个位给 595
+  65   2             temp2=temp2<<1;  //字节移位 准备送下一位        
+  66   2             SCKB=1;
+  67   2         }
+  68   1          STRB=1;
+  69   1        STRB=0;
+  70   1      }
+  71          ///
+  72          /*****************打开595显示***************/
+  73          void dis_open( )
+  74          {
+  75   1        OEA=OEB=OEC =0;
+  76   1      }
+  77          /******************关闭595显示**************/
+  78          void dis_close( )
+  79          {
+  80   1        OEA=OEB=OEC =1;
+  81   1      }
+  82          
+  83          /********************************/
+  84          
+  85          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    105    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

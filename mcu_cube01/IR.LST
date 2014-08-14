@@ -1,0 +1,127 @@
+C51 COMPILER V9.52.0.0   IR                                                                07/28/2014 21:01:29 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE IR
+OBJECT MODULE PLACED IN .\HEX\IR.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE IR.C DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\IR.obj)
+
+line level    source
+
+   1          #include "IR.h"
+   2          
+   3          //红外用全局变量
+   4          uchar bitnum;  //红外解码位计数变量
+   5          
+   6          bit startflag;
+   7          bit irreceok;
+   8          bit irprosok;
+   9          uchar irdata[33];
+  10          uchar ircode[4];
+  11          /**红外解码处理函数*/
+  12          void IR_pros(void)
+  13          {
+  14   1          //下面是解码了用户码和操作码,如果加上用户码判别,可以杜绝不同遥控器的干扰
+  15   1        uchar i,j,k,value;
+  16   1        k=1;
+  17   1          for(i=0;i<4;i++)            //四个字节
+  18   1          {
+  19   2              for(j=1;j<=8;j++)        //每个字节中的八位
+  20   2              {
+  21   3                  if(irdata[k]>14)      
+  22   3                  {
+  23   4                         value=value|0x80;//或上0x80 就为1  
+  24   4                  }
+  25   3                  else                                   
+  26   3                  {
+  27   4                        
+  28   4                value=value;     //否则就为0
+  29   4                  }
+  30   3            if(j<8)
+  31   3              {
+  32   4              value=value>>1;     //8为数据移位
+  33   4              }
+  34   3                k++;      //位数加1
+  35   3              }    
+  36   2              ircode[i]=value;                              //把处理完的字节放到irdate_pro里
+  37   2            value=0;
+  38   2          }
+  39   1        if(ircode[2]==~ircode[3]&&ircode[0]==~ircode[1]&&ircode[0]==0x00) //加入用户码判断
+  40   1        irprosok=1;
+  41   1      
+  42   1      /*  
+  43   1      //下面的只解码了用户码,所用的时间最短,但容易受到其他遥控器的干扰  
+  44   1        uchar  j, k,value;
+  45   1        k=17;                      //从第17位数据开始是我们需要的8位数据码
+  46   1        for(j=1;j<=8;j++)      //只需处理第3个字节8位(数据码)
+  47   1          {
+  48   1          //cord=irdata[k];   //解码的关键是如何识别“0”和“1”，从位的定义我们可以发现“0”、“1”均以0.56ms的低
+             -电平开始，不同的是高电平的宽度不同，“0”为0.56ms,“1”为1.68ms
+  49   1            if(irdata[k]>7)     //大于某值为1  这里也可以算一下 125*14=1.75ms   我们从原理中知道1”为1.68ms的时间
+             -长度
+  50   1            {
+  51   1              value=value|0x80;//或上0x80 就为1 
+  52   1          }
+  53   1            else
+C51 COMPILER V9.52.0.0   IR                                                                07/28/2014 21:01:29 PAGE 2   
+
+  54   1          {
+  55   1              value=value;     //否则就为0
+  56   1          }
+  57   1            if(j<8)
+  58   1          {
+  59   1            value=value>>1;     //8为数据移位
+  60   1          }
+  61   1            k++;      //位数加1
+  62   1           }
+  63   1         ircode[2]=value;  //8位数据码接受完成
+  64   1           value=0;        //变量清0
+  65   1         irprosok=1;//处理完毕标志位置1
+  66   1         */
+  67   1      }
+  68          
+  69          /*********************************
+  70          定时器1方式0(16位自动重装载模式)定时时间为255us
+  71          (此时的晶振是22.1184M的)算一下255*33=8.415ms跟9ms差不多接近就可以了
+  72           255*63=16.056ms 所以小于13.5<16.056 这些数据大概就可以了 没必要那么精确 但也不能太离谱
+  73          所以有了这样判断if(irtime<63&&irtime>=33) 
+  74          **********************************/
+  75          void INT1_IR (void) interrupt 2 using 0//外部中断1服务函数
+  76          {
+  77   1        if(startflag)                        
+  78   1          {
+  79   2              if(irtime<132&&irtime>=65)  //125US
+  80   2          //if(irtime<63&&irtime>=33)  //255US      //若成功接受引导码  125*108=13500us
+  81   2              {                                
+  82   3                  bitnum=0;
+  83   3              }
+  84   2              irdata[bitnum]=irtime;   //把红外数据存到irdate里，第一个为引导码，后边依次为系统码及数据码
+  85   2              irtime=0;
+  86   2              bitnum++;
+  87   2          if(bitnum==33)            //接受数据完毕
+  88   2              {
+  89   3                  irreceok=1;       //接受完成标志位置1
+  90   3                  bitnum=0;
+  91   3                  startflag=0;      //开始接收标志位置0
+  92   3              }
+  93   2                    
+  94   2          }
+  95   1          else                      //若第一个下降沿到来，则置开始接收标志位，同时bittime清零
+  96   1          {
+  97   2              irtime=0;
+  98   2              startflag=1;
+  99   2          } 
+ 100   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    130    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     38    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

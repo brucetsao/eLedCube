@@ -1,0 +1,75 @@
+C51 COMPILER V9.52.0.0   EXTI                                                              07/28/2014 21:01:29 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE EXTI
+OBJECT MODULE PLACED IN .\HEX\Exti.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Exti.c DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\Exti.obj)
+
+line level    source
+
+   1          #include "Exti.h"
+   2          
+   3          //#include "povdat.h" 
+   4          uint D=400;
+   5          bit Int0_flag;
+   6          //uint Pt;
+   7          //uchar T0_S=179;
+   8          
+   9          /*********************************************************************************************
+  10          函数名：外部中断INT初始化函数
+  11          调  用：INT_init();
+  12          参  数：无
+  13          返回值：无
+  14          结  果：启动外部中断INT1、INT0中断，设置中断方式
+  15          备  注：
+  16          /**********************************************************************************************/
+  17          void Exti_init (void)
+  18          {
+  19   1         IT0=1;      //外中断0触发方式,为1时为下降沿有效,为0时低电平有效
+  20   1         IT1=1;           //外中断1触发方式, 为1时为下降沿有效,为0时低电平有效
+  21   1         EX0=1;      //外中断0使能标志
+  22   1         EX1=1;      //外中断1使能标志
+  23   1         EA=1;           //开总中断；
+  24   1      }
+  25          /**********************************************************************************************/
+  26          
+  27          
+  28          /********************* INT0中断函数 *************************/
+  29          void Ext_INT0 (void) interrupt 0  using 2   //进中断时已经清除标志
+  30          {
+  31   1        /*
+  32   1        TR0=0;
+  33   1        D+=(T0_S-180)*2;   //修正值
+  34   1          Pt=600+D;       //得到定时器T0的初设值
+  35   1        TH0=-Pt/256;TL0=-Pt%256;   //设置定时器T0的初设值
+  36   1        T0_S=0;            //计数器清零，将重新计数 
+  37   1        TR0=1;
+  38   1        */
+  39   1        Int0_flag=1;
+  40   1        //line_now=0;
+  41   1        speed++;
+  42   1        EX0=0;        //关外中断
+  43   1        D+=(T0_S-180)*2;   //修正值
+  44   1          Pt=600+D;       //得到定时器T0的初设值
+  45   1        TH0=-Pt/256;TL0=-Pt%256;   //设置定时器T0的初设值
+  46   1        T0_S=0;            //计数器清零，将重新计数 
+  47   1        line_now=0;
+  48   1        EX0=1;        //开外中断
+  49   1      }
+  50          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     96    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V9.52.0.0   EXTI                                                              07/28/2014 21:01:29 PAGE 2   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

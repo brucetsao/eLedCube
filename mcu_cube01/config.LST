@@ -1,0 +1,62 @@
+C51 COMPILER V9.00   CONFIG                                                                07/04/2013 23:19:07 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE CONFIG
+OBJECT MODULE PLACED IN config.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE config.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include  "config.H"
+   2          
+   3          bit Time0_flag=0;       //定时器T0中断标志位
+*** ERROR C279 IN LINE 3 OF CONFIG.C: 'Time0_flag': multiple initialization
+*** ERROR C244 IN LINE 3 OF CONFIG.C: 'Time0_flag': can't initialize, bad type or class
+*** ERROR C132 IN LINE 3 OF CONFIG.C: 'Time0_flag': not in formal parameter list
+   4          //bit Time1_flag=0;     //定时器T1中断标志位
+   5          bit  T_S0_flag=0;        
+*** ERROR C279 IN LINE 5 OF CONFIG.C: 'T_S0_flag': multiple initialization
+*** ERROR C244 IN LINE 5 OF CONFIG.C: 'T_S0_flag': can't initialize, bad type or class
+*** ERROR C132 IN LINE 5 OF CONFIG.C: 'T_S0_flag': not in formal parameter list
+   6          
+   7          /*定义全局变量*/
+   8          uchar dat1,dat2,dat3; dat4,dat5,dat6; //显示用变量
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat1': not in formal parameter list
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat2': not in formal parameter list
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat3': not in formal parameter list
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat4': not in formal parameter list
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat5': not in formal parameter list
+*** ERROR C132 IN LINE 8 OF CONFIG.C: 'dat6': not in formal parameter list
+   9          uint Pt,S0,T,D,T0_S=179;                      //计数用的变量
+*** ERROR C132 IN LINE 9 OF CONFIG.C: 'Pt': not in formal parameter list
+*** ERROR C132 IN LINE 9 OF CONFIG.C: 'S0': not in formal parameter list
+*** ERROR C132 IN LINE 9 OF CONFIG.C: 'T': not in formal parameter list
+*** ERROR C132 IN LINE 9 OF CONFIG.C: 'D': not in formal parameter list
+*** ERROR C279 IN LINE 9 OF CONFIG.C: 'T0_S': multiple initialization
+*** ERROR C244 IN LINE 9 OF CONFIG.C: 'T0_S': can't initialize, bad type or class
+*** ERROR C132 IN LINE 9 OF CONFIG.C: 'T0_S': not in formal parameter list
+  10          /****************************************************************
+  11          函数名：LED显示用延时函数
+  12          调  用：delay();
+  13          参  数：无
+  14          返回值：无
+  15          结  果：占用CPU方式延时500微秒时间
+  16          备  注：晶振24.0m 1T模式，每个机器周期为0.06254US；
+  17          /****************************************************************/
+  18          void delay(void)   //误差 -0.46875us
+  19          {
+*** ERROR C132 IN LINE 19 OF CONFIG.C: 'delay': not in formal parameter list
+*** ERROR C141 IN LINE 19 OF CONFIG.C: syntax error near '{'
+  20              uchar a,b;
+*** ERROR C136 IN LINE 20 OF CONFIG.C: 'a': 'void' on variable
+*** ERROR C132 IN LINE 20 OF CONFIG.C: 'a': not in formal parameter list
+*** ERROR C136 IN LINE 20 OF CONFIG.C: 'b': 'void' on variable
+*** ERROR C132 IN LINE 20 OF CONFIG.C: 'b': not in formal parameter list
+  21              for(b=20;b>0;b--)
+*** ERROR C141 IN LINE 21 OF CONFIG.C: syntax error near 'for'
+*** ERROR C141 IN LINE 21 OF CONFIG.C: syntax error near '=', expected ')'
+*** ERROR C129 IN LINE 21 OF CONFIG.C: missing ';' before '>'
+  22                  for(a=3;a>0;a--);
+  23          }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  28 ERROR(S)

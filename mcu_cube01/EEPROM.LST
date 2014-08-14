@@ -1,0 +1,105 @@
+C51 COMPILER V9.52.0.0   EEPROM                                                            07/28/2014 21:01:30 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE EEPROM
+OBJECT MODULE PLACED IN .\HEX\EEPROM.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE EEPROM.C DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\EEPROM.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          #include "EEPROM.H"
+   3          /*----------------------------
+   4          软件延时
+   5          ----------------------------*/
+   6          /*
+   7          void Delay1() //延时程序
+   8          {
+   9              uint i;
+  10              uint d=1000;
+  11              while (d--)
+  12              {
+  13                  i=1000;
+  14                  while (i--);
+  15              }
+  16          }
+  17          */
+  18          /*----------------------------
+  19          关闭IAP
+  20          ----------------------------*/
+  21          void IapIdle()
+  22          {
+  23   1          IAP_CONTR = 0;                  //关闭IAP功能
+  24   1          IAP_CMD = 0;                    //清除命令寄存器
+  25   1          IAP_TRIG = 0;                   //清除触发寄存器
+  26   1          IAP_ADDRH = 0x80;               //将地址设置到非IAP区域
+  27   1          IAP_ADDRL = 0;
+  28   1      }
+  29          
+  30          /*----------------------------
+  31          从ISP/IAP/EEPROM区域读取一字节
+  32          ----------------------------*/
+  33          uchar IapReadByte(uint addr)
+  34          {
+  35   1          uchar dat;                       //数据缓冲区
+  36   1      
+  37   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+  38   1          IAP_CMD = CMD_READ;             //设置IAP命令
+  39   1          IAP_ADDRL = addr;               //设置IAP低地址
+  40   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+  41   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+  42   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+  43   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+  44   1          dat = IAP_DATA;                 //读ISP/IAP/EEPROM数据
+  45   1          IapIdle();                      //关闭IAP功能
+  46   1      
+  47   1          return dat;                     //返回
+  48   1      }
+  49          
+  50          /*----------------------------
+  51          写一字节数据到ISP/IAP/EEPROM区域
+  52          ----------------------------*/
+  53          void IapProgramByte(uint addr, uchar dat)
+  54          {
+  55   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+C51 COMPILER V9.52.0.0   EEPROM                                                            07/28/2014 21:01:30 PAGE 2   
+
+  56   1          IAP_CMD = CMD_PROGRAM;          //设置IAP命令
+  57   1          IAP_ADDRL = addr;               //设置IAP低地址
+  58   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+  59   1          IAP_DATA = dat;                 //写ISP/IAP/EEPROM数据
+  60   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+  61   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+  62   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+  63   1          IapIdle();
+  64   1      }
+  65          
+  66          /*----------------------------
+  67          扇区擦除
+  68          ----------------------------*/
+  69          void IapEraseSector(uint addr)
+  70          {
+  71   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+  72   1          IAP_CMD = CMD_ERASE;            //设置IAP命令
+  73   1          IAP_ADDRL = addr;               //设置IAP低地址
+  74   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+  75   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+  76   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+  77   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+  78   1          IapIdle();
+  79   1      }
+  80          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     78    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

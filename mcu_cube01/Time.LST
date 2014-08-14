@@ -1,0 +1,186 @@
+C51 COMPILER V9.52.0.0   TIME                                                              07/28/2014 21:01:28 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\HEX\Time.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Time.c DEBUG OBJECTEXTEND TABS(2) OBJECT(.\HEX\Time.obj)
+
+line level    source
+
+   1          #include "Time.h"
+   2          
+   3          bit pic_ch_flag;   //图片切换标志
+   4          bit Time0_flag=0;  //定时器0中断标志
+   5          bit pic_red_ok=0;  //图片读缓冲标志
+   6          bit pic_rd_flag;   //图片完成标志
+   7          bit open_close_flang=0; 
+   8          bit time_refurbish_flag; //时间刷新显示标志
+   9          //uint D=400;
+  10          uchar speed;     //电机速度变量
+  11          uchar speedsum;    //电机速度计数变量
+  12          
+  13          uint Pt;       //自适应时间重装值
+  14          uint T0_S=179;     //定时器0中断（显示分数计数值）
+  15          uint line_now;     //表盘修正现在列、修正值
+  16          uint line_vol;   
+  17          uchar irtime;    //红外解码定时器1中断计数变量
+  18          uchar num;
+  19          uchar day,month,year,week,second,minute,hour; //系统时间变量
+  20          
+  21          void Time_init(void)  //定时器初始化
+  22          {
+  23   1         AUXR=0XD5; //设置T0 1T模式, 模式串行模式为12T, 允许使用内部RAM,允许独立波特率发生器，
+  24   1                // b7       b6       b5       b4      b3     b2     b1     b0
+  25   1                //t0x12   t1x12    uart_m0x6  TR2   T2/CT   T2X12 EXTRAM  SIST2       
+  26   1                //  1        1      0      1     0    1      0      1
+  27   1              //SIST2   定时器2是否用作串口1的波特率发生器  
+  28   1              //EXTRAM  内部/外部RAM存取控制   0允许内部RAM存取，
+  29   1              //T2x12    定时器2时钟模式
+  30   1              //T2/CT    定时器2用作定时还是计数器
+  31   1              //TR2      定时器2允许运行
+  32   1              
+  33   1              
+  34   1         TMOD=0X01; //定时器0工作方式1,/定时器1工作方式2,8位自动重装；
+  35   1                //   b7   b6   b5  b4  b3   b2  b1   b0/
+  36   1                //  GATE  C/T  M1   M0 GATE C/T M1   M0
+  37   1                //    0   0    1  0 0  0   0   1
+  38   1      
+  39   1         /*
+  40   1         IT0=1;      //外中断0触发方式,为1时为下降沿有效,为0时低电平有效
+  41   1         IT1=1;           //外中断1触发方式, 为1时为下降沿有效,为0时低电平有效
+  42   1         EX0=1;      //外中断0使能标志
+  43   1         EX1=1;      //外中断1使能标志
+  44   1         EA=1;      //开总中断；
+  45   1         */
+  46   1         TL0 = 0x71;    //设置定时初值   153
+  47   1         TH0 = 0xDD;    //设置定时初值
+  48   1         //TL1 = 0xF8;    //设置定时初值   255
+  49   1         //TH1 = 0xE9;    //设置定时初值
+  50   1         TL1 = 0x33;    //设置定时初值   125
+  51   1         TH1 = 0xF5;    //设置定时初值
+  52   1         TR1 = 1;        //开启定时器1
+  53   1         TR0 = 1;    //打开定时器0
+  54   1         //TR1 =0;     //关定时器1
+  55   1         //TR0 =0;     //关定时器0
+C51 COMPILER V9.52.0.0   TIME                                                              07/28/2014 21:01:28 PAGE 2   
+
+  56   1         ET0 = 1;    //定时器0中断使能,为1时开,为0时关
+  57   1         ET1 = 1;    //定时器1中断使能,为1时开,为0时关
+  58   1         //ET0 = 0;    //定时器0中断使能,为1时开,为0时关
+  59   1         //ET1 = 0;    //定时器1中断使能,为1时开,为0时关     
+  60   1      }
+  61          /****************************************************************
+  62          函数名：定时器0中断服务函数  中断号:1 ;
+  63          调  用：无
+  64          参  数：无
+  65          返回值：无
+  66          功  能：提供显示位置所需的时间;
+  67          备  注：定时器0,工作方式1,16位定时器 1T模式,
+  68          /****************************************************************/
+  69          
+  70          void timer0(void)   interrupt 1   using 1
+  71          {
+  72   1          TR0=0;
+  73   1        Time0_flag=1;            //定时中断标志位置1;
+  74   1        TH0=-Pt/256;TL0=-Pt%256;   //设置定时器T0的初设值
+  75   1        T0_S++; 
+  76   1        //if(T0_S>179)                   //计数
+  77   1        //Int0_flag=0;
+  78   1        line_now=180-line_vol+T0_S;  //反时针旋转
+  79   1        if(line_now>180)
+  80   1        line_now=T0_S-line_vol;
+  81   1        TR0=1;
+  82   1      }
+  83          
+  84          /****************************************************************
+  85          函数名：定时器1中断服务函数  中断号:3 ;
+  86          调  用：无
+  87          参  数：无
+  88          返回值：无
+  89          功  能：提供显示位置所需的时间;
+  90          备  注：定时器1,工作方式0,16位自动重装载 1T模式,
+  91          /****************************************************************/
+  92          
+  93          void timer1(void)   interrupt 3   using 2
+  94          {
+  95   1        uint s,j,k,n,c;
+  96   1        s++; irtime++;  j++; n++;c++;   //  second,minute,hour
+  97   1        if(j==2)  {j=0;  pic_ch_flag=1;}      //动画刷屏时间
+  98   1        if(n==600){n=0;  pic_red_ok=1; }
+  99   1      
+ 100   1        //if(j == 50   )  {j=0;  pic_ch_flag=1;}     //图片刷新间隔时间
+ 101   1        //if(n == 44000 )  {n=0;  pic_red_ok=1; }    
+ 102   1        if(c == 600 )  
+ 103   1        {
+ 104   2          c=0;  
+ 105   2          time_refurbish_flag=1;
+ 106   2          line_vol++; 
+ 107   2          if(line_vol>179) 
+ 108   2          line_vol=0;
+ 109   2        }
+ 110   1        if(s==8000)
+ 111   1        {
+ 112   2          s=0;
+ 113   2          speedsum=speed;
+ 114   2          speed=0;
+ 115   2          second++;  
+ 116   2          k++;
+ 117   2          /*
+C51 COMPILER V9.52.0.0   TIME                                                              07/28/2014 21:01:28 PAGE 3   
+
+ 118   2          if(speed>10)
+ 119   2          {
+ 120   2            speed=0;
+ 121   2            open_close_flang=1;
+ 122   2            TR0=1;
+ 123   2          }
+ 124   2          else {TR0=0;}
+ 125   2          */
+ 126   2          if(k==3) 
+ 127   2          {
+ 128   3            k=0;
+ 129   3          //  pic_ch_flag=1;
+ 130   3            //if(uart_flang)
+ 131   3            {
+ 132   4              //UART_Send_Byte(pov_dat[num]) ;
+ 133   4              //P0=pov_dat[1];
+ 134   4              num++;// i++;
+ 135   4              if(num>719)
+ 136   4              {
+ 137   5              num=0;
+ 138   5              }
+ 139   4              
+ 140   4            }
+ 141   3            LED0=!LED0;
+ 142   3          }
+ 143   2          if(second==60)
+ 144   2          {
+ 145   3            second=0;
+ 146   3            minute++;
+ 147   3            if(minute==60)
+ 148   3            {
+ 149   4              minute=0;
+ 150   4              hour++;
+ 151   4              if(hour>11)
+ 152   4              {
+ 153   5                hour=0;
+ 154   5              }
+ 155   4            }
+ 156   3          }
+ 157   2        }
+ 158   1      }
+ 159            
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    315    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     19      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      6    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
